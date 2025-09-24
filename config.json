@@ -13,18 +13,18 @@
   "notesLanguage": "en",
   "adminOnly": {
     "enable": false,
-    "ignoreCommand": [61572240295227]
+    "ignoreCommand": [61578130127315]
   },
   "adminBot": [
-    "61572240295227",
-    "61579988683968"
+    "61578130127315",
+    "61578130127315"
   ],
   "whiteListMode": {
     "enable": false,
-    "whiteListIds": [61572240295227]
+    "whiteListIds": [61578130127315]
   },
-  "nickNameBot": "「 𝐍𝐈𝐑𝐎𝐁 」(∩˃o˂∩)♡",
-  "prefix": "/",
+  "nickNameBot": "kael bot",
+  "prefix": "*",
   "database": {
     "type": "sqlite",
     "uriMongodb": "",
