@@ -100,10 +100,10 @@ ${info.extra ? `📝 Extra: ${info.extra}` : ""}
       if (nextPage > totalPages) nextPage = 1;
 
       msg += `────────────────────────────
-Dev: Nirob | Nick: Kakashi
-FB: https://facebook.com/hatake.kakashi.NN
+Dev: B R Y S O N
+FB: unknown 
 
-React 🖤 to go next page
+React 😆 to go next page
 or type: ${prefix}help ${nextPage}
 ────────────────────────────`;
 
@@ -119,7 +119,7 @@ or type: ${prefix}help ${nextPage}
       global.GoatBot.onReaction.set(sentMsg.messageID, {
         messageObj: message,
         onReact: async (eventReact) => {
-          if (eventReact.reaction !== '🖤') return;
+          if (eventReact.reaction !== '😆') return;
 
           let nextPage = p + 1;
           if (nextPage > totalPages) nextPage = 1;
