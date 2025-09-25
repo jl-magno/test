@@ -1,134 +1,91 @@
 const { getPrefix } = global.utils;
 const { commands } = global.GoatBot;
 
-const helpImages = [
-  "https://files.catbox.moe/wseew7.jpg",
-  "https://files.catbox.moe/tywnfi.jpg",
-  "https://files.catbox.moe/tse9uk.jpg",
-  "https://files.catbox.moe/l8d5af.jpg",
-  "https://files.catbox.moe/hgmwuw.jpg",
-  "https://files.catbox.moe/gu6m57.jpg",
-  "https://files.catbox.moe/t366ko.jpg",
-  "https://files.catbox.moe/pto5xi.jpg",
-  "https://files.catbox.moe/td2723.jpg",
-  "https://files.catbox.moe/y5kplz.jpg"
-];
-
-function getRandomImage() {
-  return helpImages[Math.floor(Math.random() * helpImages.length)];
-}
-
-function buildCategory(catName, commands, prefix) {
-  const cmdList = commands.map(c => `${prefix}${c}`).join("   ");
-  return `───────────────\n📂 ${catName}\n${cmdList}\n───────────────\n`;
-}
-
 module.exports = {
   config: {
     name: "help",
-    version: "2.3",
-    author: "ＮＩＲＯＢ",
+    version: "3.5",
+    author: "Mostakim",
+    usePrefix: false,
     role: 0,
-    shortDescription: { en: "Help menu with 🖤 pagination & command info" },
-    longDescription: { en: "Shows commands by category with images or specific command info." },
     category: "info",
-    guide: { en: "{pn} [1-10] or {pn} <commandName>" },
+    priority: 1
   },
 
-  onStart: async function ({ message, args, event, role }) {
-    const prefix = getPrefix(event.threadID) || global.GoatBot.config.prefix || "!";
+  onStart: async function ({ message, args, event, threadsData, role }) {
+    const prefix = getPrefix(event.threadID);
+    const arg = args[0]?.toLowerCase();
 
-    // যদি কোনো specific command উল্লেখ করা হয়
-    if (args[0] && isNaN(args[0])) {
-      const query = args[0].toLowerCase().trim();
-      const cmd = commands.get(query);
+    const header = "╔═━「 𝐇𝐄𝐋𝐏 𝐌𝐄𝐍𝐔 」━═╗";
+    const footer = "╚═━──────────────━═╝";
 
-      if (!cmd) return message.reply(`❌ Command "${query}" পাওয়া যায়নি.`);
+    if (!arg) {
+      const list = Array.from(commands.entries())
+        .filter(([_, cmd]) => cmd.config?.role <= role)
+        .map(([name]) => `┃ ✦ ${name}`)
+        .join("\n");
 
-      const info = cmd.config || {};
       return message.reply(
-`｡･:*:･ﾟ★,｡･:*:･ﾟ♡
-   🌸 Command Info 🌸
-｡･:*:･ﾟ♡,｡･:*:･ﾟ★
-
-💖 Command: ${info.name || query}
-🎀 Author: ${info.author || "Unknown"}
-🧸 Modifier: ${info.modifier || "None"}
-📂 Category: ${info.category || "Uncategorized"}
-📝 Description: ${info.description || "No description"}
-🍬 Usage: ${prefix}${info.usage || info.name || query}
-${info.extra ? `📝 Extra: ${info.extra}` : ""}
-｡･:*:･ﾟ★,｡･:*:･ﾟ♡`
+        `${header}\n` +
+        `┃ 🔑 Prefix: ${prefix}\n` +
+        `┃ 📂 Total Commands: ${commands.size}\n` +
+        `┃ ⚙️ Available Commands:\n` +
+        `${list}\n` +
+        `${footer}\n` +
+        `\n📌 Use \`${prefix}help -<category>\` to filter by category\n` +
+        `📌 Use \`${prefix}help <command>\` to see command info`
       );
     }
 
-    // Pagination system for all commands
-    let page = 1;
-    if (args.length > 0) {
-      const p = parseInt(args[0]);
-      if (!isNaN(p) && p >= 1 && p <= 10) page = p;
+    if (arg === "-c" && args[1]) {
+      const cmdName = args[1].toLowerCase();
+      const cmd = commands.get(cmdName) || commands.get(global.GoatBot.aliases.get(cmdName));
+
+      if (!cmd || cmd.config.role > role)
+        return message.reply(`✘ Command "${cmdName}" not found or access denied.`);
+
+      return message.reply(
+        `${header}\n` +
+        `┃ ✦ Command: ${cmdName}\n` +
+        `┃ ✦ Category: ${cmd.config.category || "Uncategorized"}\n` +
+        `${footer}`
+      );
     }
 
-    const availableCommands = [];
-    for (const [name, cmd] of commands) {
-      if (cmd.config.role > role) continue;
-      availableCommands.push(cmd);
+    if (arg.startsWith("-")) {
+      const category = arg.slice(1).toLowerCase();
+      const matched = Array.from(commands.entries())
+        .filter(([_, cmd]) => cmd.config?.category?.toLowerCase() === category && cmd.config.role <= role)
+        .map(([name]) => `┃ ✦ ${name}`);
+
+      if (matched.length === 0)
+        return message.reply(`✘ No commands found under "${category}".`);
+
+      return message.reply(
+        `╔═━「 𝐂𝐀𝐓𝐄𝐆𝐎𝐑𝐘: ${category.toUpperCase()} 」━═╗\n` +
+        `${matched.join("\n")}\n` +
+        `${footer}\n` +
+        `\n📌 Try: \`${prefix}help <command>\` to view details`
+      );
     }
 
-    const categories = {};
-    for (const cmd of availableCommands) {
-      const cat = cmd.config.category || "Other";
-      if (!categories[cat]) categories[cat] = [];
-      categories[cat].push(cmd.config.name);
-    }
+    const cmd = commands.get(arg) || commands.get(global.GoatBot.aliases.get(arg));
 
-    const allCategories = Object.keys(categories);
-    const totalPages = 10;
-    const perPage = Math.ceil(allCategories.length / totalPages);
+    if (!cmd || cmd.config.role > role)
+      return message.reply(`✘ Command "${arg}" not found.`);
 
-    async function sendPage(p, oldMessageID = null) {
-      const startIndex = (p - 1) * perPage;
-      const endIndex = startIndex + perPage;
-      const pageCategories = allCategories.slice(startIndex, endIndex);
+    const info = cmd.config;
+    const guide = info.guide?.en || "No usage info.";
+    const desc = info.longDescription?.en || "No description.";
 
-      let msg = `🐾 Kakashi Help Menu 🐾\nPage ${p}/${totalPages}\n────────────────────────────\n`;
-      for (const cat of pageCategories) {
-        msg += buildCategory(cat, categories[cat], prefix);
-      }
-
-      let nextPage = p + 1;
-      if (nextPage > totalPages) nextPage = 1;
-
-      msg += `────────────────────────────
-Dev: B R Y S O N
-FB: unknown 
-
-React 😆 to go next page
-or type: ${prefix}help ${nextPage}
-────────────────────────────`;
-
-      const sentMsg = await message.reply({
-        body: msg,
-        attachment: await global.utils.getStreamFromURL(getRandomImage())
-      });
-
-      if (oldMessageID) {
-        try { await global.GoatBot.api.unsendMessage(oldMessageID); } catch (e) {}
-      }
-
-      global.GoatBot.onReaction.set(sentMsg.messageID, {
-        messageObj: message,
-        onReact: async (eventReact) => {
-          if (eventReact.reaction !== '😆') return;
-
-          let nextPage = p + 1;
-          if (nextPage > totalPages) nextPage = 1;
-
-          await sendPage(nextPage, sentMsg.messageID);
-        }
-      });
-    }
-
-    await sendPage(page);
+    return message.reply(
+      `╔═━「 𝐂𝐎𝐌𝐌𝐀𝐍𝐃 𝐃𝐄𝐓𝐀𝐈𝐋𝐒 」━═╗\n` +
+      `┃ ✦ Name: ${info.name}\n` +
+      `┃ ✦ Description: ${desc}\n` +
+      `┃ ✦ Usage: ${guide.replace(/{p}/g, prefix).replace(/{n}/g, info.name)}\n` +
+      `┃ ✦ Role: ${info.role}\n` +
+      `┃ ✦ Category: ${info.category || "Uncategorized"}\n` +
+      `${footer}`
+    );
   }
 };
