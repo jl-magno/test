@@ -16,11 +16,11 @@ module.exports = {
   onStart: async function ({ api, event }) {
     try {
       const ownerInfo = {
-        name: ' ＮＩＲＯＢ ᶻ 𝗓 𐰁',
-        age: ' 19 ',
-        nick: 'kakashi',
-        gender: '🚹 Male',
-        tag: '⌛ Time Traveler'
+        name: ' BRYSON ᶻ 𝗓 𐰁',
+        age: ' 100 ',
+        nick: 'KYSLER',
+        gender: 'MALE',
+        tag: 'LU2 IS LIFE'
       };
 
       const videoURL = 'https://files.catbox.moe/026g5j.mp4';
